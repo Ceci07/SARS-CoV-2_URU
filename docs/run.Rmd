@@ -1,0 +1,158 @@
+---
+title: "Phylodynamics"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Alignment of the clean2 dataset 
+
+```{}
+echo ""
+echo ""
+echo "SARS-CoV-2 phylodynamic analysis"
+echo ""
+echo ""
+
+
+echo ""
+echo ""
+echo "Alignment of sequences"
+
+
+singularity exec /mnt/cive/csalazar/software/nextalign.sif nextalign -i derep_retrived_clean2_dataset1_headers.fasta -r /mnt/cive/csalazar/references/gisaid_hcov-19_2021_11_22_20.fasta -d nextalign_dataset1_clean2_fixed -j 32 > nextalign.log 2>&1
+
+if [ -d "nextalign_dataset1_clean2_fixed" ]; then
+echo "Alignment DONE!";
+else
+echo "Alignment FAILED!!";
+fi
+```
+
+#### Construct initial tree topology using IQ-TREE
+
+```{}
+echo ""
+echo ""
+echo "ML tree"
+
+
+conda activate nextstrain
+cd nextalign_dataset1_clean2_fixed/
+iqtree -s derep_retrived_clean2_dataset1_headers.aligned.fasta -T AUTO -m GTR+G > IQTree.log 2>&1
+
+if [ -f "derep_retrived_clean2_dataset1_headers.aligned.fasta.treefile" ]; then
+echo "ML phylogeny DONE!";
+else
+echo "ML phylogeny FAILED!!";
+fi
+```
+
+
+#### Check molecular clock
+
+Root-to-tip distance was also assessed using TempEst tool
+
+```{}
+echo ""
+echo ""
+echo "Check the molecular clock-like behavior"
+
+
+treetime clock --tree *.fasta.treefile \
+--dates ../fx_final_metadata-dataset1.tsv  \
+--aln *.aligned.fasta \
+--outdir clock_results_filter3 --clock-filter 3 > treetime_clock_filter3.log 2>&1
+
+if [ -d "clock_results_filter3" ]; then
+echo "Temporal signal assessment DONE!";
+else
+echo "Temporal signal assessment FAILED!!";
+fi
+```
+
+
+#### Create time-scaled phylogeny using the joint method of TreeTime
+
+```{}
+echo ""
+echo ""
+echo "Create time-scaled phylogeny using the joint model"
+
+treetime --tree *.fasta.treefile \
+--dates ../fx_final_metadata-dataset1.tsv \
+--aln *.aligned.fasta \
+--outdir treetime_out_joint_clean2 \
+--reroot oldest \
+--plot-tree dated_tree.png \
+--plot-rtt rtt.png > treetime_joint.log 2>&1
+
+if [ -d "treetime_out_joint_clean2" ]; then
+echo "Time-scaled phylogeny using the joint model DONE!";
+else
+echo "Time-scaled phylogeny using the joint model FAILED!!";
+fi
+```
+
+#### Ancestral state reconstruction
+
+```{}
+echo ""
+echo ""
+echo "Ancestral state reconstruction"
+
+treetime ancestral --aln *.aligned.fasta \
+--tree treetime_out_joint_clean2/timetree.nexus \
+--outdir treetime_out_joint_clean2/ancestral_results > treetime_ancestral.log 2>&1
+
+if [ -d "treetime_out_joint_clean2/ancestral_results" ]; then
+echo "Ancestral state reconstruction DONE!";
+else
+echo "Ancestral state reconstruction FAILED!!";
+fi
+``` 
+
+#### Transition between geographical locations
+
+```{}
+echo ""
+echo ""
+echo "Transition between geographical regions estimation"
+
+
+treetime mugration --tree treetime_out_joint_clean2/ancestral_results/annotated_tree.nexus \
+--states ../fx_final_metadata-dataset1.tsv \
+--attribute location \
+--confidence \
+--outdir treetime_out_joint/joint_mugration_region \
+--missing-data MD  > treetime_mugration_region.log 2>&1
+
+if [ -d "treetime_out_joint/joint_mugration_region" ]; then
+echo "Mugration using Region DONE!";
+else
+echo "Mugration using Region FAILED!!";
+fi
+
+echo ""
+echo ""
+echo "Transition between geographical subregions estimation"
+
+treetime mugration --tree treetime_out_joint_clean2/ancestral_results/annotated_tree.nexus \
+--states ../fx_final_metadata-dataset1.tsv \
+--attribute subregion \
+--confidence \
+--outdir treetime_out_joint/joint_mugration_region \
+--missing-data MD  > treetime_mugration_subregion.log 2>&1
+
+
+if [ -d "treetime_out_joint/joint_mugration_region" ]; then
+echo "Mugration using subregion DONE!";
+else
+echo "Mugration using subregion FAILED!!";
+fi
+```
+
+
