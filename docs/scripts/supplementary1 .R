@@ -26,7 +26,7 @@ colnames(df)[19] <- c("Positivity")
 colnames(df)[14] <- c("Tests")
 
 dt <- df %>%
-        select(fecha, Cases, UCI, Deaths, Tests) %>%
+        select(fecha, Cases, UCI, Deaths) %>%
         gather(key = "variable", value = "value",-fecha)
 head(dt, 3)
 
@@ -63,12 +63,6 @@ c <- ggplot(dt, aes(x = as.Date(fecha), y = value)) +
                 legend.position = "top",
                 legend.box.just = "center"
         ) +
-        scale_x_date(date_breaks = "3 months") +
-        geom_vline(
-                xintercept = as.numeric(as.Date("2020-10-18")),
-                linetype = 3,
-                color = "#433236"
-        ) +
         geom_vline(
                 xintercept = as.numeric(as.Date("2020-12-05")),
                 linetype = 3,
@@ -86,17 +80,8 @@ c <- ggplot(dt, aes(x = as.Date(fecha), y = value)) +
         ) +
         annotate(
                 "text",
-                x = as.Date("2020-10-23"),
-                y = 25000,
-                label = "P.6",
-                angle = 90,
-                size = 5,
-                color = "#433236"
-        ) +
-        annotate(
-                "text",
                 x = as.Date("2020-12-10"),
-                y = 25000,
+                y = 4500,
                 label = "Gamma",
                 angle = 90,
                 size = 5,
@@ -105,7 +90,7 @@ c <- ggplot(dt, aes(x = as.Date(fecha), y = value)) +
         annotate(
                 "text",
                 x = as.Date("2021-05-08"),
-                y = 25000,
+                y = 4500,
                 label = "Delta",
                 angle = 90,
                 size = 5,
@@ -114,7 +99,7 @@ c <- ggplot(dt, aes(x = as.Date(fecha), y = value)) +
         annotate(
                 "text",
                 x = as.Date("2021-03-04"),
-                y = 25000,
+                y = 3500,
                 label = "Vaccination campaign",
                 angle = 90,
                 size = 5,
@@ -448,11 +433,6 @@ cc <- ggplot(d, aes(x = as.Date(fecha), y = value)) +
                 legend.box.just = "center"
         ) +
         scale_x_date(date_breaks = "3 months") +
-        geom_vline(
-                xintercept = as.numeric(as.Date("2020-10-18")),
-                linetype = 3,
-                color = "#433236"
-        ) +
         geom_vline(
                 xintercept = as.numeric(as.Date("2020-12-05")),
                 linetype = 3,
